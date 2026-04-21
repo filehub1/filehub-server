@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f0f23"/>
+    </linearGradient>
+    
+    <linearGradient id="bgHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2a2a4a"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    
+    <linearGradient id="lens" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    
+    <linearGradient id="lensInner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    
+    <linearGradient id="bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+    
+    <linearGradient id="handle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    
+    <linearGradient id="handleAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="glowStrong" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    
+    <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.15"/>
+      <stop offset="50%" stop-color="#fff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  
+  <!-- Background subtle pattern -->
+  <rect width="512" height="512" rx="112" fill="url(#bgHighlight)" opacity="0.3"/>
+  
+  <!-- Decorative dots -->
+  <circle cx="420" cy="92" r="8" fill="#6366f1" opacity="0.3"/>
+  <circle cx="450" cy="130" r="6" fill="#6366f1" opacity="0.2"/>
+  <circle cx="380" cy="70" r="4" fill="#6366f1" opacity="0.25"/>
+  <circle cx="92" cy="420" r="6" fill="#f97316" opacity="0.2"/>
+  <circle cx="70" cy="450" r="5" fill="#f97316" opacity="0.15"/>
+  
+  <!-- Magnifier shadow -->
+  <ellipse cx="256" cy="326" rx="150" ry="150" fill="#000" opacity="0.3" filter="url(#shadow)"/>
+
+  <!-- Magnifier outer ring -->
+  <circle cx="256" cy="256" r="145" fill="none" stroke="url(#lens)" stroke-width="32" filter="url(#glow)" opacity="0.9"/>
+  
+  <!-- Magnifier inner ring -->
+  <circle cx="256" cy="256" r="130" fill="none" stroke="#1e40af" stroke-width="3" opacity="0.5"/>
+  
+  <!-- Magnifier lens background -->
+  <circle cx="256" cy="256" r="120" fill="url(#lensInner)"/>
+  
+  <!-- Lens glass effect -->
+  <ellipse cx="206" cy="206" rx="60" ry="40" fill="url(#glass)"/>
+  <circle cx="326" cy="316" r="20" fill="#fff" opacity="0.05"/>
+  
+  <!-- Lightning bolt -->
+  <path d="M276 156 L221 251 L251 251 L236 346 L301 241 L261 241 L281 156 Z" 
+        fill="url(#bolt)" filter="url(#glowStrong)"/>
+  
+  <!-- Bolt highlight -->
+  <path d="M271 171 L236 236 L256 236 L246 306 L281 231 L251 231 L266 171 Z" 
+        fill="#fff" opacity="0.3"/>
+
+  <!-- Handle -->
+  <line x1="361" y1="361" x2="456" y2="456" stroke="url(#handle)" stroke-width="38" stroke-linecap="round"/>
+  
+  <!-- Handle highlight -->
+  <line x1="356" y1="356" x2="436" y2="436" stroke="url(#handleAccent)" stroke-width="12" stroke-linecap="round" opacity="0.5"/>
+  
+  <!-- Handle end cap -->
+  <circle cx="456" cy="456" r="22" fill="url(#handle)"/>
+  <circle cx="456" cy="456" r="12" fill="url(#handleAccent)" opacity="0.5"/>
+  
+  <!-- Sparkles around bolt -->
+  <circle cx="206" cy="176" r="6" fill="#facc15" filter="url(#glow)" opacity="0.8"/>
+  <circle cx="306" cy="206" r="4" fill="#facc15" filter="url(#glow)" opacity="0.6"/>
+  <circle cx="186" cy="246" r="3" fill="#facc15" filter="url(#glow)" opacity="0.5"/>
+  
+  <!-- Inner glow on lens edge -->
+  <circle cx="256" cy="256" r="145" fill="none" stroke="#60a5fa" stroke-width="2" opacity="0.3"/>
+</svg>

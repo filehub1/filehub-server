@@ -1,0 +1,12 @@
+services:
+  filehub-server:
+    image: exiahuang/filehub-server:v1.0
+    container_name: filehub-server
+    ports:
+      - "6543:6543"
+    volumes:
+      - ${DATA_PATH:-.}:/data
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+

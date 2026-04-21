@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist/main",
+    "rootDir": "src/main",
+    "resolveJsonModule": true,
+    "types": ["node"]
+  },
+  "include": ["src/main/web-server.ts", "src/main/config.ts", "src/main/indexer.ts", "src/main/preview.ts"]
+}
