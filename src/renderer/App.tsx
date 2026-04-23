@@ -416,11 +416,12 @@ const App: React.FC = () => {
   const [copiedContent, setCopiedContent] = useState(false);
   const [previewSearch, setPreviewSearch] = useState('');
   const [wordWrap, setWordWrap] = useState(true);
-  const [pdfViewer, setPdfViewer] = useState<'builtin' | 'browser'>(() => (localStorage.getItem('filehub-pdf-viewer') as any) || 'builtin');
+  const [pdfViewer, setPdfViewer] = useState<'builtin' | 'browser'>(() => (localStorage.getItem('filehub-pdf-viewer') as any) || 'browser');
   const [officeView, setOfficeView] = useState<'plain' | 'rich'>(() => (localStorage.getItem('filehub-office-view') as any) || 'rich');
   const [textLineLimit, setTextLineLimit] = useState<number>(() => parseInt(localStorage.getItem('filehub-text-line-limit') || '20000', 10));
   const [scrollExpand, setScrollExpand] = useState(() => localStorage.getItem('filehub-scroll-expand') === 'true');
   const [searchInPath, setSearchInPath] = useState(() => localStorage.getItem('filehub-search-in-path') === 'true');
+  const [maxResults, setMaxResults] = useState<number>(() => parseInt(localStorage.getItem('filehub-max-results') || '500', 10));
   const [bgMediaPlay, setBgMediaPlay] = useState(() => localStorage.getItem('filehub-bg-media-play') === 'true');
   const [mdReader, setMdReader] = useState(() => localStorage.getItem('filehub-md-reader') !== 'false');
   const [xlsxMaxMb, setXlsxMaxMb] = useState(50);
@@ -647,7 +648,7 @@ const App: React.FC = () => {
     }
     
     try {
-      const res = await electronAPI.search(searchQuery, 100, searchType, searchInPath);
+      const res = await electronAPI.search(searchQuery, maxResults, searchType, searchInPath);
       updateTab(tabId, { results: res, selectedIndex: 0 });
       if (res.length > 0) {
         const first = res[0];
@@ -1558,6 +1559,13 @@ const App: React.FC = () => {
               <input type="number" min={100} max={500000} value={textLineLimit}
                 onChange={(e) => { const v = Math.max(100, parseInt(e.target.value) || 20000); setTextLineLimit(v); localStorage.setItem('filehub-text-line-limit', String(v)); }}
                 style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: 13, outline: 'none' }} />
+            <div className="settings-row" style={{ marginTop: 12 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13 }}>Max Search Results</label>
+              <input type="number" min={10} max={10000} value={maxResults}
+                onChange={(e) => { const v = Math.max(10, parseInt(e.target.value) || 500); setMaxResults(v); localStorage.setItem('filehub-max-results', String(v)); }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: 13, outline: 'none' }} />
+            </div>
+
             </div>
             <div className="settings-row" style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
               <input type="checkbox" id="scroll-expand" checked={scrollExpand} onChange={e => { setScrollExpand(e.target.checked); localStorage.setItem('filehub-scroll-expand', String(e.target.checked)); }} style={{ cursor: 'pointer' }} />
