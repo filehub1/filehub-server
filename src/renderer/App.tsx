@@ -108,8 +108,10 @@ const PPT_EXTENSIONS = ['ppt', 'pptx'];
 const OFFICE_EXTENSIONS = ['doc', 'docx'];
 const TEXT_PREVIEW_FILENAMES = ['dockerfile', 'makefile', 'cmakelists.txt', 'license', 'licence', 'readme', 'readme.md', '.gitignore', '.gitattributes', '.editorconfig', '.npmrc', '.yarnrc', '.yarnrc.yml', '.prettierrc', '.prettierrc.json', '.prettierrc.js', '.prettierrc.cjs', '.eslintrc', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yml', '.babelrc', '.babelrc.json', '.nvmrc', '.node-version'];
 
+const API_BASE: string = (typeof window !== 'undefined' && (window as any).__FILEHUB_API_BASE__) || '';
+
 async function apiGet<T>(path: string): Promise<T> {
-  const response = await fetch(path);
+  const response = await fetch(API_BASE + path);
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
   }
@@ -117,7 +119,7 @@ async function apiGet<T>(path: string): Promise<T> {
 }
 
 async function apiPost<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(API_BASE + path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -138,6 +140,7 @@ interface AppConfig {
 }
 
 function isLocalBrowserClient(): boolean {
+  if ((window as any).__FILEHUB_IS_LOCAL__) return true;
   const host = window.location.hostname;
   return host === '127.0.0.1' || host === 'localhost';
 }
@@ -229,13 +232,15 @@ const browserFallbackAPI = {
     const isLocal = isLocalBrowserClient() || isAndroidApp() || isAndroid();
     if (!isLocal) {
       if (!getRemoteOpenEnabled()) { return false; }
-      if (canBrowserView(ext)) {
-        window.open(`/api/file-stream?path=${encodeURIComponent(filePath)}`, '_blank');
-        return true;
-      }
-      return false;
+      // LAN client: open via browser (downloads/opens locally on client)
+      window.open(API_BASE + `/api/file-stream?path=${encodeURIComponent(filePath)}`, '_blank');
+      return true;
     }
-    const result = await apiPost<{ success: boolean }>('/api/open-file', { path: filePath });
+    const result = await apiPost<{ success: boolean; streamUrl?: string }>('/api/open-file', { path: filePath });
+    if (result.streamUrl) {
+      window.open(API_BASE + result.streamUrl, '_blank');
+      return true;
+    }
     return result.success;
   },
   openInExplorer: async (filePath: string) => {
@@ -416,7 +421,7 @@ const App: React.FC = () => {
   const [copiedContent, setCopiedContent] = useState(false);
   const [previewSearch, setPreviewSearch] = useState('');
   const [wordWrap, setWordWrap] = useState(true);
-  const [pdfViewer, setPdfViewer] = useState<'builtin' | 'browser'>(() => (localStorage.getItem('filehub-pdf-viewer') as any) || 'browser');
+  const [pdfViewer, setPdfViewer] = useState<'builtin' | 'browser'>(() => (localStorage.getItem('filehub-pdf-viewer') as any) || 'builtin');
   const [officeView, setOfficeView] = useState<'plain' | 'rich'>(() => (localStorage.getItem('filehub-office-view') as any) || 'rich');
   const [textLineLimit, setTextLineLimit] = useState<number>(() => parseInt(localStorage.getItem('filehub-text-line-limit') || '20000', 10));
   const [scrollExpand, setScrollExpand] = useState(() => localStorage.getItem('filehub-scroll-expand') === 'true');
@@ -441,6 +446,8 @@ const App: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   
   const inputRef = useRef<HTMLInputElement>(null);
+  const appRef = useRef<HTMLDivElement>(null);
+  const previewSearchRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const modeRef = useRef(mode);
@@ -455,13 +462,13 @@ const App: React.FC = () => {
       if (el.paused) { el.play(); return; }
       else { el.pause(); return; }
     }
-    fetch('/api/midi/play', { method: 'POST' }).catch(() => {});
+    fetch(API_BASE + '/api/midi/play', { method: 'POST' }).catch(() => {});
   }, []);
 
   const handleMediaPlay = useCallback(() => {
     const el = document.querySelector<HTMLMediaElement>('video, audio');
     if (el) el.play();
-    else fetch('/api/midi/play', { method: 'POST' }).catch(() => {});
+    else fetch(API_BASE + '/api/midi/play', { method: 'POST' }).catch(() => {});
   }, []);
 
   const handleMediaPause = useCallback(() => {
@@ -470,7 +477,7 @@ const App: React.FC = () => {
 
   const handleMediaStop = useCallback(() => {
     document.querySelectorAll<HTMLMediaElement>('video, audio').forEach(el => { el.pause(); el.currentTime = 0; });
-    fetch('/api/midi/stop').catch(() => {});
+    fetch(API_BASE + '/api/midi/stop').catch(() => {});
   }, []);
   
   useEffect(() => {
@@ -517,10 +524,20 @@ const App: React.FC = () => {
 
     inputRef.current?.focus();
 
+    const onFocus = () => appRef.current?.focus();
+    window.addEventListener('focus', onFocus);
+
+    const onMsg = (e: MessageEvent) => {
+      if (e.data?.type === 'filehub-focus') appRef.current?.focus();
+    };
+    window.addEventListener('message', onMsg);
+
     return () => {
       unsubProgress();
       unsubComplete();
       if (pollTimer) clearInterval(pollTimer);
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('message', onMsg);
     };
   }, []);
 
@@ -782,7 +799,7 @@ const App: React.FC = () => {
       const blob = new Blob([activeTab.previewContent], { type: 'text/plain' });
       a.href = URL.createObjectURL(blob);
     } else {
-      a.href = `/api/file-stream?path=${encodeURIComponent(activeTab.previewFile.path)}`;
+      a.href = API_BASE + `/api/file-stream?path=${encodeURIComponent(activeTab.previewFile.path)}`;
     }
     a.download = activeTab.previewFile.name;
     document.body.appendChild(a);
@@ -1176,6 +1193,12 @@ const App: React.FC = () => {
           }
         }
         break;
+      case 'f':
+        e.preventDefault();
+        if (activeTab.previewType === 'text' || activeTab.previewType === 'code') {
+          previewSearchRef.current?.focus();
+        }
+        break;
       case 'O':
         e.preventDefault();
         if (activeTab.results.length > 0) {
@@ -1272,8 +1295,9 @@ const App: React.FC = () => {
         {
           const selectedFile = activeTab.results[activeTab.selectedIndex];
           if (selectedFile) {
-            const workDir = selectedFile.isDirectory ? selectedFile.path : selectedFile.path.substring(0, selectedFile.path.lastIndexOf('\\'));
-            electronAPI.openTerminal(workDir);
+            const p = selectedFile.path;
+            const workDir = selectedFile.isDirectory ? p : p.substring(0, Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\')));
+            electronAPI.openTerminal(workDir || p);
           }
         }
         break;
@@ -1407,7 +1431,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="app" tabIndex={0} onKeyDown={handleKeyDown}>
+    <div ref={appRef} className="app" tabIndex={0} onKeyDown={handleKeyDown}>
       <header className="header">
         <div className="tab-bar">
           {tabs.map((tab, index) => (
@@ -1696,6 +1720,7 @@ const App: React.FC = () => {
               <h4>Actions</h4>
               <div className="help-item"><kbd>l</kbd> / <kbd>Enter</kbd> <span>Open file</span></div>
               <div className="help-item"><kbd>o</kbd> <span>Toggle preview</span></div>
+              <div className="help-item"><kbd>f</kbd> <span>Focus filter (text/code)</span></div>
               <div className="help-item"><kbd>O</kbd> <span>Open in explorer</span></div>
               <div className="help-item"><kbd>!</kbd> <span>Open terminal</span></div>
               <div className="help-item"><kbd>r</kbd> <span>Rebuild index</span></div>
@@ -1900,12 +1925,13 @@ const App: React.FC = () => {
             {['text','code','ppt','xlsx'].includes(activeTab.previewType) && (
               <div className="preview-search-bar">
                 <input
+                  ref={previewSearchRef}
                   className="preview-search-input"
                   type="text"
                   placeholder="Filter..."
                   value={previewSearch}
                   onChange={e => setPreviewSearch(e.target.value)}
-                  onKeyDown={e => e.key === 'Escape' && setPreviewSearch('')}
+                  onKeyDown={e => { if (e.key === 'Escape') { setPreviewSearch(''); appRef.current?.focus(); } }}
                 />
                 {previewSearch && (
                   <button className="preview-search-clear" onClick={() => setPreviewSearch('')}>×</button>
@@ -1964,7 +1990,7 @@ disabled={status?.status === 'indexing'}
                 className="btn-icon"
                 onClick={async () => {
                   try {
-                    const resp = await fetch('/api/debug');
+                    const resp = await fetch(API_BASE + '/api/debug');
                     const contentType = resp.headers.get('content-type');
                     if (contentType?.includes('application/json')) {
                       const data = await resp.json();
@@ -2071,8 +2097,16 @@ function ImagePreview({ base64Data, filename }: { base64Data: string; filename: 
 }
 
 function BrowserPdfViewer({ filePath }: { filePath: string }) {
-  const src = `/api/file-stream?path=${encodeURIComponent(filePath)}`;
-  return <iframe src={src} className="preview-pdf" title="PDF Preview" />;
+  const [src, setSrc] = React.useState<string>('');
+  React.useEffect(() => {
+    // Use data URL to avoid nested iframe cross-origin issues (e.g. VSCode webview)
+    fetch(`${API_BASE}/api/file-stream?path=${encodeURIComponent(filePath)}`)
+      .then(r => r.blob())
+      .then(blob => setSrc(URL.createObjectURL(blob)))
+      .catch(() => setSrc(`${API_BASE}/api/file-stream?path=${encodeURIComponent(filePath)}`));
+    return () => { if (src.startsWith('blob:')) URL.revokeObjectURL(src); };
+  }, [filePath]);
+  return src ? <iframe src={src} className="preview-pdf" title="PDF Preview" /> : null;
 }
 
 function CsvViewer({ text }: { text: string }) {
@@ -2112,8 +2146,8 @@ function MidiPlayer({ src }: { src: string }) {
 
   const call = async (action: string) => {
     const url = action === 'play'
-      ? `/api/midi/play?path=${encodeURIComponent(filePath)}`
-      : `/api/midi/${action}`;
+      ? API_BASE + `/api/midi/play?path=${encodeURIComponent(filePath)}`
+      : API_BASE + `/api/midi/${action}`;
     const res = await fetch(url);
     return res.json();
   };
@@ -2122,7 +2156,7 @@ function MidiPlayer({ src }: { src: string }) {
     if (pollRef.current) return;
     pollRef.current = setInterval(async () => {
       try {
-        const s = await (await fetch('/api/midi/status')).json();
+        const s = await (await fetch(API_BASE + '/api/midi/status')).json();
         setPlaying(s.playing);
         setPosition(s.position);
         setDuration(s.duration);
@@ -2137,7 +2171,7 @@ function MidiPlayer({ src }: { src: string }) {
 
   useEffect(() => {
     // On mount, check if this file is already playing (e.g. returning to tab)
-    fetch('/api/midi/status').then(r => r.json()).then(s => {
+    fetch(API_BASE + '/api/midi/status').then(r => r.json()).then(s => {
       if (s.path === filePath && s.playing) {
         setPlaying(true);
         setPosition(s.position);
