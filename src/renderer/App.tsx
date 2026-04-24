@@ -1195,8 +1195,8 @@ const App: React.FC = () => {
         break;
       case 'f':
         e.preventDefault();
-        if (activeTab.previewType === 'text' || activeTab.previewType === 'code') {
-          previewSearchRef.current?.focus();
+        if (previewSearchRef.current) {
+          previewSearchRef.current.focus();
         }
         break;
       case 'O':
@@ -1720,7 +1720,7 @@ const App: React.FC = () => {
               <h4>Actions</h4>
               <div className="help-item"><kbd>l</kbd> / <kbd>Enter</kbd> <span>Open file</span></div>
               <div className="help-item"><kbd>o</kbd> <span>Toggle preview</span></div>
-              <div className="help-item"><kbd>f</kbd> <span>Focus filter (text/code)</span></div>
+              <div className="help-item"><kbd>f</kbd> <span>Focus filter (when available)</span></div>
               <div className="help-item"><kbd>O</kbd> <span>Open in explorer</span></div>
               <div className="help-item"><kbd>!</kbd> <span>Open terminal</span></div>
               <div className="help-item"><kbd>r</kbd> <span>Rebuild index</span></div>
