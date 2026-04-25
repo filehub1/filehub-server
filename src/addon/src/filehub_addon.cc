@@ -36,6 +36,26 @@ class FileIndexer {
 private:
     std::vector<FileEntry> files;
     std::vector<std::u16string> indexedVolumes;
+    std::vector<std::u16string> excludePatterns;
+
+    bool matchesExclude(const std::u16string& name) {
+        std::u16string nameLower = to_lower(name);
+        // always exclude hidden (dot) entries
+        if (!nameLower.empty() && nameLower[0] == u'.') return true;
+        for (const auto& pat : excludePatterns) {
+            // simple wildcard: only support leading/trailing * for now
+            if (pat.find(u'*') == std::u16string::npos) {
+                if (nameLower == pat) return true;
+            } else {
+                // *.ext pattern
+                if (pat.size() > 1 && pat[0] == u'*') {
+                    std::u16string suffix = pat.substr(1);
+                    if (ends_with(nameLower, suffix)) return true;
+                }
+            }
+        }
+        return false;
+    }
     
     bool isAdmin() {
         BOOL isAdmin = FALSE;
@@ -101,6 +121,9 @@ private:
             
             bool isDir = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
             std::u16string name = wstringToU16(wname);
+
+            if (matchesExclude(name)) continue;
+
             std::u16string fullPath = dirPath + name;
             
             FileEntry entry;
@@ -156,6 +179,18 @@ public:
         if (info.Length() < 1 || !info[0].IsString()) {
             Napi::TypeError::New(env, "Expected directory path").ThrowAsJavaScriptException();
             return Napi::Array::New(env, 0);
+        }
+
+        // Parse excludePatterns (second arg, optional array of strings)
+        excludePatterns.clear();
+        if (info.Length() >= 2 && info[1].IsArray()) {
+            Napi::Array arr = info[1].As<Napi::Array>();
+            for (uint32_t i = 0; i < arr.Length(); i++) {
+                Napi::Value v = arr.Get(i);
+                if (v.IsString()) {
+                    excludePatterns.push_back(to_lower(v.As<Napi::String>().Utf16Value()));
+                }
+            }
         }
         
         std::u16string dirPath = u"\\\\?\\" + info[0].As<Napi::String>().Utf16Value();
