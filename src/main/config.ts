@@ -8,6 +8,7 @@ export interface AppConfig {
   address: string;
   excludePatterns: string[];
   theme?: 'dark' | 'light';
+  openMode?: 'local' | 'remote' | 'disabled';
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -87,13 +88,17 @@ export function loadConfig(): AppConfig {
     : DEFAULT_CONFIG.excludePatterns;
 
   const theme = (loaded as any).theme === 'light' ? 'light' : 'dark';
+  const rawOpenMode = (loaded as any).openMode;
+  const openMode: AppConfig['openMode'] = ['local', 'remote', 'disabled'].includes(rawOpenMode)
+    ? rawOpenMode : 'local';
 
   return {
     indexedDirectories,
     useAdminMode,
     address: normalizeAddress(address, DEFAULT_CONFIG.address),
     excludePatterns,
-    theme
+    theme,
+    openMode
   };
 }
 

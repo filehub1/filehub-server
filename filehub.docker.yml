@@ -41,3 +41,4 @@ excludePatterns:
 theme: dark
 lanEnabled: false
 lanUser: ''
+openMode: remote

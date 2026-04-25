@@ -1,6 +1,6 @@
 services:
   filehub-server:
-    image: exiahuang/filehub-server:v1.0
+    image: exiahuang/filehub-server:latest
     container_name: filehub-server
     ports:
       - "6543:6543"

@@ -299,18 +299,27 @@ async function start(): Promise<void> {
 
       if (req.method === 'POST' && url.pathname === '/api/open-file') {
         const body = await readJsonBody(req);
+        const openMode = config.openMode ?? 'local';
+        if (openMode === 'disabled') { sendJson(res, 200, { success: false }); return; }
+        if (openMode === 'remote') {
+          const fp = typeof body.path === 'string' ? body.path : null;
+          sendJson(res, 200, fp ? { success: true, streamUrl: `/api/file-stream?path=${encodeURIComponent(fp)}` } : { success: false });
+          return;
+        }
         sendJson(res, 200, { success: typeof body.path === 'string' ? openFile(body.path) : false });
         return;
       }
 
       if (req.method === 'POST' && url.pathname === '/api/open-in-explorer') {
         const body = await readJsonBody(req);
+        if ((config.openMode ?? 'local') !== 'local') { sendJson(res, 200, { success: false }); return; }
         sendJson(res, 200, { success: typeof body.path === 'string' ? openInExplorer(body.path) : false });
         return;
       }
 
       if (req.method === 'POST' && url.pathname === '/api/open-terminal') {
         const body = await readJsonBody(req);
+        if ((config.openMode ?? 'local') !== 'local') { sendJson(res, 200, { success: false }); return; }
         sendJson(res, 200, { success: typeof body.workDir === 'string' ? openTerminal(body.workDir) : false });
         return;
       }
