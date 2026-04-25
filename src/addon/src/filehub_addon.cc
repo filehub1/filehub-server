@@ -204,10 +204,12 @@ public:
         
         Napi::Array result = Napi::Array::New(env, files.size());
         
+        const size_t prefixLen = 4; // strip "\\?\" prefix
         for (size_t i = 0; i < files.size(); i++) {
             Napi::Object obj = Napi::Object::New(env);
             obj.Set("name", Napi::String::New(env, files[i].name));
-            obj.Set("path", Napi::String::New(env, files[i].path));
+            std::u16string cleanPath = files[i].path.size() > prefixLen ? files[i].path.substr(prefixLen) : files[i].path;
+            obj.Set("path", Napi::String::New(env, cleanPath));
             obj.Set("size", Napi::Number::New(env, (double)files[i].size));
             obj.Set("created", Napi::Number::New(env, (double)files[i].created));
             obj.Set("modified", Napi::Number::New(env, (double)files[i].modified));
