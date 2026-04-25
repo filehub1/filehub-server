@@ -81,8 +81,8 @@ export class FileIndexService extends EventEmitter {
   private tryLoadAddon(): void {
     try {
       const possiblePaths = [
-        path.join(process.cwd(), 'src/addon/build/Release/everything_addon.node'),
-        path.join(__dirname, '../../src/addon/build/Release/everything_addon.node')
+        path.join(process.cwd(), 'src/addon/build/Release/filehub_addon.node'),
+        path.join(__dirname, '../../src/addon/build/Release/filehub_addon.node')
       ];
       
       for (const addonPath of possiblePaths) {

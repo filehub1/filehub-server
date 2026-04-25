@@ -1,9 +1,9 @@
 {
   "targets": [
     {
-      "target_name": "everything_addon",
+      "target_name": "filehub_addon",
       "sources": [
-        "src/everything_addon.cc"
+        "src/filehub_addon.cc"
       ],
       "include_dirs": [
         "node_modules/node-addon-api"

@@ -130,6 +130,11 @@ private:
 public:
     FileIndexer() {}
     
+    void clearIndex() {
+        files.clear();
+        indexedVolumes.clear();
+    }
+    
     Napi::Boolean isAdminMode(const Napi::CallbackInfo& info) {
         return Napi::Boolean::New(info.Env(), isAdmin());
     }
@@ -284,8 +289,13 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
         [indexer](const Napi::CallbackInfo& info) { return indexer->indexDirectory(info); }));
     exports.Set("readUSNJournal", Napi::Function::New(env,
         [indexer](const Napi::CallbackInfo& info) { return indexer->readUSNJournal(info); }));
+    exports.Set("clearCache", Napi::Function::New(env,
+        [indexer](const Napi::CallbackInfo& info) { 
+            indexer->clearIndex();
+            return Napi::Value();
+        }));
     
     return exports;
 }
 
-NODE_API_MODULE(everything_addon, Init)
+NODE_API_MODULE(filehub_addon, Init)
