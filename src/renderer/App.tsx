@@ -229,7 +229,7 @@ const browserFallbackAPI = {
   saveConfig: async (config: Partial<AppConfig>) => apiPost<{ success: boolean; config: AppConfig }>('/api/config', config),
   openFile: async (filePath: string) => {
     const ext = filePath.split('.').pop() || '';
-    const isLocal = isLocalBrowserClient() || isAndroidApp() || isAndroid();
+    const isLocal = isLocalBrowserClient();
     if (!isLocal) {
       if (!getRemoteOpenEnabled()) { return false; }
       // LAN client: open via browser (downloads/opens locally on client)

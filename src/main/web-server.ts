@@ -180,9 +180,9 @@ async function start(): Promise<void> {
     }
 
     const remoteIp = req.socket.remoteAddress || '';
-    const isLocalhost = remoteIp === '127.0.0.1' || remoteIp === '::1' || remoteIp === '::ffff:127.0.0.1';
+    const isLocalhost = remoteIp === '127.0.0.1' || remoteIp === '::1' || remoteIp === '::ffff:127.0.0.1' || remoteIp === '' || remoteIp.startsWith('127.');
 
-    const lanEnabled = (config as any).lanEnabled ?? (getLanIp() !== 'unknown');
+    const lanEnabled = (config as any).lanEnabled ?? false;
 
     if (!isLocalhost && !lanEnabled) {
       res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
